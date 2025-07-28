@@ -1,4 +1,6 @@
 use actix_web::{App, HttpServer};
+use dotenv::dotenv;
+use std::env;
 
 mod errors;
 mod db;
@@ -6,17 +8,19 @@ mod handler;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
 
     db::db_init().await;
+    let addr = env::var("ADDR").unwrap();
+    let port: u16 = env::var("PORT").unwrap().parse().unwrap();
 
-    println!("127.0.0.1:8080");
+    println!("{}:{}", addr, port);
     HttpServer::new(|| {
         App::new()
             .service(handler::expense::expensehandler)
             .service(handler::dashboard::dashboardhandler)
     })
-
-    .bind(("0.0.0.0", 8080))?
+    .bind((addr, port))?
     .run()
     .await
 }
